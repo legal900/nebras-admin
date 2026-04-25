@@ -1,65 +1,77 @@
 import Image from "next/image";
+import { supabase } from "@/lib/supabase";
 
-export default function Home() {
+type Plan = {
+  id: string;
+  name: string;
+  price?: number;
+  description?: string;
+};
+
+export default async function Home() {
+  const { data: plans, error } = await supabase
+    .from("subscription_plans")
+    .select("*");
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main
+      dir="rtl"
+      className="min-h-screen flex flex-col items-center justify-center bg-[#0B1F3A] text-white p-8"
+    >
+      <div className="text-center max-w-2xl w-full">
+        <div className="mb-8 flex justify-center">
+          <Image
+            src="/logo.png"
+            alt="نبراس - دليلك القانوني الذكي"
+            width={280}
+            height={280}
+            priority
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <p className="text-xl mb-2 text-gray-300">دليلك القانوني الذكي</p>
+
+        <p className="text-sm mb-12 text-[#2D9CDB] tracking-widest">
+          NEBRAS AI
+        </p>
+
+        <div className="mb-8">
+          <h2 className="text-[#C8A96A] text-lg mb-4 font-semibold">
+            خطط الاشتراك — اختبار Supabase
+          </h2>
+
+          {error ? (
+            <div className="bg-red-900/30 border border-red-500 rounded-lg p-4 text-red-300 text-sm">
+              خطأ في الاتصال: {error.message}
+            </div>
+          ) : !plans || plans.length === 0 ? (
+            <div className="bg-[#C8A96A]/10 border border-[#C8A96A]/40 rounded-lg p-4 text-gray-400 text-sm">
+              لا توجد بيانات في جدول subscription_plans
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {plans.map((plan: Plan) => (
+                <div
+                  key={plan.id}
+                  className="bg-white/5 border border-[#C8A96A]/30 rounded-xl p-4 text-right"
+                >
+                  <p className="text-[#C8A96A] font-semibold">{plan.name}</p>
+                  {plan.price !== undefined && (
+                    <p className="text-gray-300 text-sm mt-1">{plan.price} ريال</p>
+                  )}
+                  {plan.description && (
+                    <p className="text-gray-400 text-xs mt-1">{plan.description}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      </main>
-    </div>
+
+        <div className="inline-block bg-[#C8A96A]/20 border border-[#C8A96A] rounded-full px-6 py-2">
+          <p className="text-[#C8A96A] text-sm">قريباً · لوحة إدارة المنصة</p>
+        </div>
+      </div>
+    </main>
   );
 }
