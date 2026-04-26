@@ -58,6 +58,7 @@ export default function LegalContentClient() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showModal,    setShowModal]    = useState(false);
   const [saving,       setSaving]       = useState(false);
+  const [savingMsg,    setSavingMsg]    = useState("جاري الحفظ...");
   const [saveError,    setSaveError]    = useState<string | null>(null);
   const [form,         setForm]         = useState(EMPTY_FORM);
 
@@ -96,22 +97,35 @@ export default function LegalContentClient() {
       return;
     }
     setSaving(true);
+    setSavingMsg("جاري الحفظ...");
     setSaveError(null);
 
-    const { error } = await supabase.from("public_legal_documents").insert({
-      title:   form.title.trim(),
-      type:    form.type,
-      source:  form.source.trim(),
-      year:    parseInt(form.year),
-      content: form.content.trim(),
-      status:  "draft",
-    });
+    const { data: inserted, error } = await supabase
+      .from("public_legal_documents")
+      .insert({
+        title:   form.title.trim(),
+        type:    form.type,
+        source:  form.source.trim(),
+        year:    parseInt(form.year),
+        content: form.content.trim(),
+        status:  "draft",
+      })
+      .select("id")
+      .single();
 
-    if (error) {
+    if (error || !inserted) {
       setSaveError("حدث خطأ أثناء الحفظ");
       setSaving(false);
       return;
     }
+
+    setSavingMsg("جاري معالجة المحتوى...");
+
+    await fetch("/api/embeddings", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ id: inserted.id, content: form.content.trim() }),
+    });
 
     closeModal();
     if (page === 0) fetchData();
@@ -370,7 +384,7 @@ export default function LegalContentClient() {
                 disabled={saving}
                 className="flex-1 bg-[#C8A96A] hover:bg-[#b8934e] disabled:opacity-60 text-[#0B1F3A] font-semibold py-3 rounded-xl text-sm transition"
               >
-                {saving ? "جاري الحفظ..." : "حفظ"}
+                {saving ? savingMsg : "حفظ"}
               </button>
               <button
                 onClick={closeModal}

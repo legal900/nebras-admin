@@ -4,7 +4,8 @@
       "PowerShell(Rename-Item *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(npx tsc *)"
     ]
   }
 }
