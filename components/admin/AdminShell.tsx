@@ -17,7 +17,7 @@ import { signOut } from "@/app/admin/actions";
 
 const navItems = [
   { href: "/admin/dashboard",     label: "لوحة التحكم",      icon: LayoutDashboard },
-  { href: "/admin/content",       label: "المحتوى القانوني", icon: BookOpen },
+  { href: "/admin/legal-content", label: "المحتوى القانوني", icon: BookOpen },
   { href: "/admin/users",         label: "المستخدمين",        icon: Users },
   { href: "/admin/subscriptions", label: "الاشتراكات",        icon: CreditCard },
   { href: "/admin/settings",      label: "الإعدادات",         icon: Settings },
@@ -25,7 +25,7 @@ const navItems = [
 
 const pageTitles: Record<string, string> = {
   "/admin/dashboard":     "لوحة التحكم",
-  "/admin/content":       "المحتوى القانوني",
+  "/admin/legal-content": "المحتوى القانوني",
   "/admin/users":         "المستخدمين",
   "/admin/subscriptions": "الاشتراكات",
   "/admin/settings":      "الإعدادات",
