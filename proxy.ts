@@ -3,51 +3,50 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {
-  // supabaseResponse يجب أن يتحدث داخل setAll — لا تستبدله بـ NextResponse.next() جديد
   let supabaseResponse = NextResponse.next({ request });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
+  try {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
+            supabaseResponse = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            );
+          },
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
+      }
+    );
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const { pathname } = request.nextUrl;
+
+    if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+      if (!user) {
+        return NextResponse.redirect(new URL("/admin/login", request.url));
+      }
     }
-  );
 
-  // لازم تتنفذ قبل أي فحص auth — هي اللي بتعمل token refresh
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { pathname } = request.nextUrl;
-
-  // حماية /admin/* ما عدا /admin/login
-  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
-    if (!user) {
-      const loginUrl = new URL("/admin/login", request.url);
-      return NextResponse.redirect(loginUrl);
+    if (pathname === "/admin/login" && user) {
+      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
     }
+  } catch {
+    // لو Supabase فشل، نمرر الـ request بدون auth check
+    // كل صفحة محمية بتتحقق من الـ auth بنفسها
   }
 
-  // لو المستخدم مسجّل دخول وفتح صفحة Login، وجّهه للـ dashboard
-  if (pathname === "/admin/login" && user) {
-    return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-  }
-
-  // إرجاع supabaseResponse (مع الـ cookies المُحدَّثة) وليس NextResponse.next() جديد
   return supabaseResponse;
 }
 
