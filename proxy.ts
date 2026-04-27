@@ -35,12 +35,16 @@ export async function proxy(request: NextRequest) {
 
     if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
       if (!user) {
-        return NextResponse.redirect(new URL("/admin/login", request.url));
+        const url = request.nextUrl.clone();
+        url.pathname = "/admin/login";
+        return NextResponse.redirect(url);
       }
     }
 
     if (pathname === "/admin/login" && user) {
-      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin/dashboard";
+      return NextResponse.redirect(url);
     }
   } catch {
     // لو Supabase فشل، نمرر الـ request بدون auth check
